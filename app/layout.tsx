@@ -1,6 +1,7 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Toaster } from "@/components/ui/sonner"
 
 import './globals.css'
 
@@ -11,7 +12,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'NexusPlay - Gaming Club Admin',
+  title: 'Gaming Cafe - Gaming Club Admin',
   description: 'Admin dashboard for managing gaming club operations, sessions, and revenue',
 }
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   )
