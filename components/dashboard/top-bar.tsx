@@ -7,12 +7,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Bell, Search, ChevronDown, Gamepad2, DollarSign, Monitor } from "lucide-react"
+import { Bell, Search, ChevronDown, Gamepad2, DollarSign, Monitor, LogOut, User } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 type NotificationType = "session" | "revenue" | "system"
 
@@ -61,10 +70,47 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/profile": { title: "Profile", subtitle: "Your account and profile information" },
 }
 
+interface UserData {
+  username: string;
+  email: string;
+  id: number;
+}
+
 export function TopBar() {
   const [searchFocused, setSearchFocused] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   const page = pageTitles[pathname] ?? { title: "Dashboard", subtitle: "" }
+  const [user, setUser] = useState<UserData | null>(null)
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, [])
+
+  async function handleLogout() {
+    try {
+      const token = localStorage.getItem("accessToken")
+      if (token) {
+          await fetch("http://localhost:8080/api/v1/auth/logout", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          })
+      }
+    } catch (error) {
+      console.error("Logout error", error)
+    } finally {
+      localStorage.removeItem("accessToken")
+      localStorage.removeItem("refreshToken")
+      localStorage.removeItem("user") // İstifadəçi məlumatlarını da sil
+      toast.success("Çıxış edildi")
+      router.push("/login")
+    }
+  }
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6">
@@ -175,26 +221,41 @@ export function TopBar() {
         {/* Divider */}
         <div className="h-8 w-px bg-border" />
 
-        {/* User profile → Profile page */}
-        <Link
-          href="/profile"
-          className="flex items-center gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-secondary"
-          aria-label="Go to profile"
-        >
-          <Avatar className="h-8 w-8 border border-neon/30">
-            <AvatarImage src="/placeholder-user.jpg" alt="Admin avatar" />
-            <AvatarFallback className="bg-neon/10 text-xs font-semibold text-neon">
-              AK
-            </AvatarFallback>
-          </Avatar>
-          <div className="hidden lg:flex flex-col items-start">
-            <span className="text-sm font-medium text-foreground">Jeyhun Mammadsaidov</span>
-            <Badge variant="secondary" className="h-4 px-1.5 text-[9px] font-semibold text-neon border-neon/20 bg-neon/10">
-              Owner
-            </Badge>
-          </div>
-          <ChevronDown className="hidden lg:block h-3.5 w-3.5 text-muted-foreground" />
-        </Link>
+        {/* User profile → Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-secondary outline-none">
+              <Avatar className="h-8 w-8 border border-neon/30">
+                <AvatarImage src="/placeholder-user.jpg" alt="Admin avatar" />
+                <AvatarFallback className="bg-neon/10 text-xs font-semibold text-neon">
+                  {user ? user.username.substring(0, 2).toUpperCase() : '...'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="hidden lg:flex flex-col items-start">
+                <span className="text-sm font-medium text-foreground">{user ? user.username : 'Loading...'}</span>
+                <Badge variant="secondary" className="h-4 px-1.5 text-[9px] font-semibold text-neon border-neon/20 bg-neon/10">
+                  Owner
+                </Badge>
+              </div>
+              <ChevronDown className="hidden lg:block h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="cursor-pointer flex items-center">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profil</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Çıxış</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
