@@ -1,27 +1,84 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { User, Mail, Phone, Calendar, Shield } from "lucide-react"
-
-const profile = {
-  name: "Jeyhun Mammadsaidov",
-  email: "jeyhoon@gamingclubdev.az",
-  phone: "+994 55 555 55 55",
-  role: "Owner",
-  joined: "2024-01-15",
-  lastLogin: "2025-02-10, 14:32",
-}
+import { getCurrentUser } from "@/app/services/userService"
+import { UserResponseDto } from "@/app/dto/user-response.dto"
 
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr + "T00:00:00")
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+  if (!dateStr) return "N/A"
+  const d = new Date(dateStr)
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }
 
 export default function ProfilePage() {
+  const [profile, setProfile] = useState<UserResponseDto | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true)
+        const result = await getCurrentUser()
+        if (result.status === "SUCCESS") {
+          setProfile(result.data)
+        } else {
+          setError(result.message)
+        }
+      } catch (err) {
+        setError("Failed to fetch profile data. Please try again later.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [])
+
+  if (loading) {
+    return (
+      <DashboardShell>
+        <div className="flex h-full w-full items-center justify-center">
+          <p>Loading profile...</p>
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardShell>
+        <div className="flex h-full w-full items-center justify-center text-red-500">
+          <p>Error: {error}</p>
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <DashboardShell>
+        <div className="flex h-full w-full items-center justify-center">
+          <p>No profile data found.</p>
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  const userRole = profile.roles.join(", ")
+
   return (
     <DashboardShell>
       <div className="flex flex-col gap-8">
@@ -53,24 +110,24 @@ export default function ProfilePage() {
           <CardContent className="space-y-6">
             <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
               <Avatar className="h-20 w-20 border-2 border-neon/30">
-                <AvatarImage src="/placeholder-user.jpg" alt={profile.name} />
+                <AvatarImage src="/placeholder-user.jpg" alt={profile.username} />
                 <AvatarFallback className="bg-neon/10 text-2xl font-semibold text-neon">
-                  {profile.name
+                  {profile.username
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col gap-1">
-                <h3 className="text-lg font-semibold text-foreground">{profile.name}</h3>
+                <h3 className="text-lg font-semibold text-foreground">{profile.username}</h3>
                 <Badge
                   variant="secondary"
                   className="w-fit border-neon/20 bg-neon/10 px-2 py-0.5 text-xs font-semibold text-neon"
                 >
-                  {profile.role}
+                  {userRole}
                 </Badge>
                 <p className="text-xs text-muted-foreground">
-                  Member since {formatDate(profile.joined)}
+                  Member since {formatDate(profile.createdAt)}
                 </p>
               </div>
             </div>
@@ -108,7 +165,7 @@ export default function ProfilePage() {
                 <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Phone</p>
-                  <p className="font-mono text-sm text-foreground">{profile.phone}</p>
+                  <p className="font-mono text-sm text-foreground">{"N/A"}</p>
                 </div>
               </div>
             </div>
@@ -118,7 +175,7 @@ export default function ProfilePage() {
                 <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Last login</p>
-                  <p className="text-sm text-foreground">{profile.lastLogin}</p>
+                  <p className="text-sm text-foreground">{formatDate(profile.lastLoginAt)}</p>
                 </div>
               </div>
             </div>
@@ -135,7 +192,7 @@ export default function ProfilePage() {
               <div>
                 <CardTitle className="text-base">Role & access</CardTitle>
                 <CardDescription className="text-xs">
-                  Your permissions as {profile.role}
+                  Your permissions as {userRole}
                 </CardDescription>
               </div>
             </div>
