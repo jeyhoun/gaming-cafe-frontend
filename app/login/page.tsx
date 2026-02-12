@@ -196,6 +196,14 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
+              <div className="text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-muted-foreground hover:text-neon transition-colors"
+                >
+                  Parolu unutmusunuz?
+                </Link>
+              </div>
               <Button 
                 type="submit" 
                 className="w-full h-11 bg-neon text-background hover:bg-neon/90 font-bold tracking-wide shadow-[0_0_20px_-5px_rgba(var(--neon),0.5)] transition-all duration-300 hover:shadow-[0_0_30px_-5px_rgba(var(--neon),0.7)] hover:scale-[1.02] active:scale-[0.98]" 
