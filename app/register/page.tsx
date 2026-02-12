@@ -232,7 +232,7 @@ export default function RegisterPage() {
           <div className="text-xs text-muted-foreground text-center w-full font-mono">
             ALREADY AUTHORIZED?{" "}
             <Link href="/login" className="text-neon hover:text-neon/80 hover:underline transition-colors font-bold ml-1">
-              ACCESS TERMINAL
+              LOGIN
             </Link>
           </div>
         </CardFooter>

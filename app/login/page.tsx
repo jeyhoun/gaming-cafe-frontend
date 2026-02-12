@@ -217,7 +217,7 @@ export default function LoginPage() {
           <div className="text-xs text-muted-foreground text-center w-full font-mono">
             NO ACCESS?{" "}
             <Link href="/register" className="text-neon hover:text-neon/80 hover:underline transition-colors font-bold ml-1">
-              REQUEST PERMISSION
+              REGISTER
             </Link>
           </div>
         </CardFooter>
