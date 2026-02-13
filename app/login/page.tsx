@@ -201,7 +201,7 @@ export default function LoginPage() {
                   href="/forgot-password"
                   className="text-xs text-muted-foreground hover:text-neon transition-colors"
                 >
-                  Parolu unutmusunuz?
+                  Forgot Password?
                 </Link>
               </div>
               <Button 
