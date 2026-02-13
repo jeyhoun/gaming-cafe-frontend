@@ -46,7 +46,10 @@ function ResetPasswordContent() {
         console.log("Response status:", response.status);
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            // Instead of throwing error, handle it gracefully
+            console.warn(`Verification failed with status: ${response.status}`);
+            setErrorMessage("This password reset link is invalid or has expired.");
+            return;
         }
 
         const data = await response.json();
@@ -57,11 +60,12 @@ function ResetPasswordContent() {
           setIsValid(true);
         } else {
           console.warn("Token is invalid according to backend response");
-          setErrorMessage("Invalid or expired token.");
+          setErrorMessage("This password reset link is invalid or has expired.");
         }
       } catch (error: any) {
         console.error("Verification error details:", error);
-        setErrorMessage(`Failed to verify token: ${error.message}`);
+        // Show user-friendly message instead of technical error
+        setErrorMessage("This password reset link is invalid or has expired.");
       } finally {
         setIsVerifying(false);
       }
@@ -105,6 +109,10 @@ function ResetPasswordContent() {
       console.log("Reset password response:", data);
 
       if (!response.ok) {
+        // Handle expired token specifically during submit
+        if (response.status === 403 || data.message?.toLowerCase().includes("token")) {
+            throw new Error("This password reset link has expired. Please request a new one.");
+        }
         throw new Error(data.message || "Failed to reset password");
       }
 
@@ -127,7 +135,7 @@ function ResetPasswordContent() {
 
     } catch (error: any) {
       console.error("Reset Password Error:", error);
-      toast.error("ERROR", {
+      toast.error("RESET FAILED", {
         description: error.message || "An error occurred.",
         style: {
           background: 'rgba(20, 0, 0, 0.9)',
@@ -137,6 +145,12 @@ function ResetPasswordContent() {
         },
         icon: <AlertCircle className="h-5 w-5 text-destructive" />,
       });
+      
+      // If it was a token error, we might want to invalidate the UI state as well
+      if (error.message.includes("expired") || error.message.includes("invalid")) {
+          setIsValid(false);
+          setErrorMessage("This password reset link is invalid or has expired.");
+      }
     } finally {
       setIsSubmitting(false);
     }
